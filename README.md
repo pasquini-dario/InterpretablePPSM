@@ -8,6 +8,9 @@ From the [paper](https://arxiv.org/pdf/2004.07179.pdf).
 
 The notebook *Meter_interface_poc.ipynb*  contains a functional proof-of-concept for the interface of the meter. 
 
+Requirements: 
+* python3
+* Tensorflow < 2.0
 ---
 
 # Training:
@@ -26,12 +29,21 @@ In order to train on your password set, you have to modify *setup.home_train* by
 1. A textual file **called *X.txt*** containing the training-set. The training-set is composed of a list of passwords (one per line) which **frequency is preserved**. For instance, if the password *"12345"* appears 10 times in the leak, this must appear 10 times in *X.txt*. **The set of passwords must be shuffled before the training.** 
 2. A pickle file mapping chars to integers called ***charmap.pickle***. An example file can be found in *./charmap.pickle*. You can use the default one or create your own.
 
+
 The training process continues till an early-stopping criteria based on the test-sets is reached. Although a maximum number of epochs can be expressed in the configuration file.
 
 During the training, logs are saved inside *HOME/LOGs*, and can be visualized with *tensorbard*. At the end of the training, the model is saved as a keras model inside the directory */HOME/MODELs* 
 
+# Pre-trained models:
+
+*PRETRAINED_MODELs/*
+Work in progress....
+
 ---
-Work in progress
+# Model Evaluation:
+
+Work in progress....
+
 ---
 
 How to cite our work:
