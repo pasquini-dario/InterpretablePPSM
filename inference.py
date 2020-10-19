@@ -1,204 +1,97 @@
-import math
-import tqdm
-import os
-import pickle
-import tensorflow_hub as hub
 import tensorflow as tf
 import numpy as np
-import re
+from input_pipeline import MASK, string2idx, idx2string
+import tqdm
 
-EMPTY = '\t'
-
-getnettemps =  lambda p, t: np.where(p.argsort()[::-1]==t)
-
-def load(filename, python2=False, **kargs):
-    if python2:
-        kargs.update(encoding='latin1')
-    with open(filename, 'rb') as f:
-        data = pickle.load(f, **kargs)
-    return data
 
 class Inference:
     
-    def makeHoles(self, x):
-        l = len(x)
-        if self.include_last and l != self.x_len:
-            l += 1
-        xi = self.parseString(x)
-        xi = np.tile(xi, (l, 1))
-        for i in range(l):
-            xi[i, i] = -1
-        return xi
-        
-    
-    def parseString(self, C):
-        I = np.zeros(self.x_len, np.int32)
-        for i in range(len(C)):
-            c = C[i]
-            if c == EMPTY:
-                I[i] = -1
-            else:
-                if not c in self.cm:
-                    I[i] = 0
-                else:
-                    I[i] = self.cm[c]
-        return I[None, :]
-    
-    def toS(self, P):
-        return ''.join([self.cm_[p] for p in P if p > 0]) 
-            
-
-    def __init__(self, mpath, include_last=False, batch_size=4096):
-        self.mpath = mpath
+    def __init__(self, model, cm, max_len, batch_size):
+        self.model = model
+        self.max_len = max_len
         self.batch_size = batch_size
-        self.include_last = include_last
         
-        cm_path = os.path.join(mpath, 'char_map.pickle')
-        self.cm = load(cm_path)
+        self.cm = cm
         self.cm_ = np.array( [x[0] for x in sorted(self.cm.items(), key=lambda x: x[1])] )
         
-        tf.logging.set_verbosity(tf.logging.ERROR)
-        module = hub.Module(mpath)
-        out_shape = module.get_output_info_dict()['p'].get_shape().as_list()
-        self.x_len = out_shape[1]
-        
-        self.x = tf.placeholder(tf.int32, shape=(None, self.x_len))
-        # simple inference
-        out = module(self.x, as_dict=True)
-        self.infp = out['p']
-        self.infx = out['x']
-        self.inflogits = out['logits']
-        self.infprediction_string = out['prediction_string']
-        
-        ###
-        self.config = tf.ConfigProto()
-        self.config.gpu_options.allow_growth = True
-        ####
-    
-    def score(self, p, s):
-        
-        l = len(s)
-        if self.include_last and l != self.x_len:
-            l += 1
-        
-        c = np.zeros(l, np.float64)
-        
-        A = []
-        
-        for j in range(l):
-            if self.include_last and j == l-1:
-                t = 0
-            else:
-                if not s[j] in self.cm:
-                    t = len(self.cm)-1
-                else:
-                    t = self.cm[s[j]]
-            
-            nattempt = getnettemps(p[j][j], t)
-            A.append(nattempt)
-            
-            c[j] = (p[j][j][t])
-                
-        A = np.concatenate(A).ravel() + 1
-        return c, A
 
-    def infereRaw(self, H, sess=None):
-        n = len(H)
-        
-        do = lambda sess, H: sess.run([self.infx, self.infp], {self.x:H})
-        
-        if sess:
-            _, p_ = do(sess, H)
-        else:
-            print("Creating tf.Session")
-            sess = tf.Session(config=self.config)
-            sess.run(tf.global_variables_initializer())
-            sess.run(tf.tables_initializer())
-            _, p_ = do(sess, H)
-                
-        return p_, sess
+    def makeHoles(self, x, INCLUDE_END_SYMBOL):
+        xl = len(x)
+        oxi = string2idx(x, self.cm, self.max_len, 0, INCLUDE_END_SYMBOL)
+        xi = np.tile(oxi, (xl, 1))
+        for i in range(xl):
+            xi[i, i] = MASK
+        return oxi, xi
     
-    def _meterBatch(self, H, X, sess=None):
+    def un_p(self, xi, p, scalar=False):
+        mp = np.zeros(len(p))
+        for i in range(len(p)):
+            t = xi[i]
+            mp[i] = p[i][i][t]
+            
+        if scalar:
+            return np.log(mp).sum()
+        
+        return mp
+    
+    def __call__(self, s, INCLUDE_END_SYMBOL):
+        
+        oxi, xi = self.makeHoles(s, INCLUDE_END_SYMBOL)
+        i = np.arange(len(xi[0]))[None,:]
+        
+        out = self.model([xi, i], training=False)
+        p = out[1]
+
+        un_p = self.un_p(oxi, p)
+    
+        return un_p
+    
+    
+    def _alppyBatch(self, H, X, L):
+        
         n = len(X)
         
-        do = lambda sess, H: sess.run([self.infx, self.infp], {self.x:H})
-        
-        if sess:
-            _, p_ = do(sess, H)
-        else:
-            print("Creating tf.Session")
-            with tf.Session(config=self.config) as sess:
-                sess.run(tf.global_variables_initializer())
-                sess.run(tf.tables_initializer())
-                _, p_ = do(sess, H)
-            
+        I = np.arange(len(H[0]))[None,:]
+        I = np.tile(I, (len(H), 1))
+        out = self.model([H, I], training=False)
+        p_ = out[1]
+
         SCOREs = [None] * n
         tot = 0
+        
         for i in range(n):
-            l = len(X[i])
-            if self.include_last and l != self.x_len:
-                l += 1
+            l = L[i]
             pi = p_[tot:tot+l]
             assert len(pi) == l
-            SCOREs[i] = self.score(pi, X[i])
+            SCOREs[i] = self.un_p(X[i], pi, scalar=True)
             tot += l
         return SCOREs
-        
-        
-    def meterBatched(self, _X):
+    
+    def applyBatch(self, _X, INCLUDE_END_SYMBOL):
         H = []
         X = []
+        L = []
         SCORE = []
-        
-        with tf.Session(config=self.config) as sess:
-            sess.run(tf.global_variables_initializer())
-            sess.run(tf.tables_initializer())
-        
-            for i, x_ in tqdm.tqdm( list( enumerate(_X) ) ):
-                X.append(x_)
-                xi = self.makeHoles(x_)
-                H.append(xi)
 
-                if i and i % self.batch_size == 0:
-                    H = np.concatenate(H)
-                    SCORE += self._meterBatch(H, X, sess)
-                    H = []
-                    X = []
-                    
-            if H:
+        for i, x_ in tqdm.tqdm( list( enumerate(_X) ) ):
+            oxi, xi = self.makeHoles(x_, INCLUDE_END_SYMBOL)
+            L.append(len(x_))
+            X.append(oxi)
+            H.append(xi)
+
+            if i and i % self.batch_size == 0:
                 H = np.concatenate(H)
-                SCORE += self._meterBatch(H, X, sess)
+                SCORE += self._alppyBatch(H, X, L)
+                H = []
+                X = []
+                L = []
+        if H:
+            H = np.concatenate(H)
+            SCORE += self._alppyBatch(H, X, L)
 
         return SCORE
-        
-
-    def meterSingle(self, s, sess=None):
-        
-        xi = self.makeHoles(s)
-        
-        if sess is None:
-            sess = tf.Session(config=self.config)
-            sess.run(tf.global_variables_initializer())
-            sess.run(tf.tables_initializer())
-        x_, p_, prediction_string_ = sess.run([self.infx, self.infp, self.infprediction_string], {self.x:xi})
-            
-        c = self.score(p_, s)
-            
-        prediction_string_ = [''.join(ss.decode().split('\n')) for ss in prediction_string_]
-        
-        return prediction_string_, c, p_, sess
     
-    
-    def characterGuess(self, s, sess=None, include_last=False):
-        if include_last:
-            ss = s + '\n'
-        
-        xs, cp, p, sess = self.meterSingle(s, sess=sess)
-            
-        C = []
-        for i, pp in enumerate(p):
-            perm = pp[i].argsort(0)[::-1]
-            ci = self.cm_[perm].tolist()
-            C.append(ci)
-            
-        return C, cp[0], p, sess
+    def sorting(self, X):
+        up = np.array(self.applyBatch(X))
+        perm = np.argsort(-up)
+        return perm

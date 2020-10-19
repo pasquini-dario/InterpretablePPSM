@@ -1,0 +1,29 @@
+setup.home_train = './HOME/TRAIN/'
+setup.home_tests = './HOME/TESTs/*.txt'
+setup.max_epochs = 50
+setup.log_freq = 500
+
+# CNN
+setup.MODEL_TYPE = 1
+setup.MAX_LEN = 16
+
+setup.hparams = {
+    'masked_chars' : -1,
+    'append_end' : 1,
+
+    'arch' : 1,
+    'n_blocks' : 10,
+    'block_type' : 0,
+    'k' : 200,
+    'embedding_size' : 64,
+    'latent_size' : 80,
+    'filter_size' : 5,    
+    'activation' : 'relu',
+    
+    'alpha' : 10,
+    
+    'loss_type' : 0,
+    
+    'batch_size' : 3072,
+    'learning_rate' : 0.0001,
+}
