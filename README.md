@@ -34,6 +34,9 @@ The training process continues till an early-stopping criteria based on the test
 
 During the training, logs are saved inside *HOME/LOGs*, and can be visualized with *tensorboard*. At the end of the training, the model is saved as a keras model inside the directory */HOME/MODELs* 
 
+To note:
+* In *ORIGINAL.gin* the used batch size is quite big. Reduce it if you have memory problems with your GPU. 
+
 # Pre-trained models:
 
 *PRETRAINED_MODELs/*
