@@ -58,11 +58,6 @@ In the script, there are additional parameters that you may want to change in ca
 Work in progress....
 
 ---
-# Model Evaluation:
-
-Work in progress....
-
----
 
 How to cite our work:
 
