@@ -1,6 +1,6 @@
 # Interpretable Probabilistic Password Strength Meters via Deep Learning
 
-From the [paper](https://arxiv.org/pdf/2004.07179.pdf).
+From the [ESORICS20](https://link.springer.com/chapter/10.1007/978-3-030-58951-6_25), [arxiv-extended](https://arxiv.org/pdf/2004.07179.pdf).
 
 <p align="center">
 	<img src ="head.png" />
