@@ -11,7 +11,7 @@ setup.hparams = {
     'masked_chars' : -1,
     'append_end' : 1,
 
-    'arch' : 1,
+    'arch' : 0,
     'n_blocks' : 10,
     'block_type' : 0,
     'k' : 200,
