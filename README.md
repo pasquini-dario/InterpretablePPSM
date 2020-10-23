@@ -27,7 +27,7 @@ An example of configuration file can be found in *CONFs/ORIGINAL.gin*.<br>
 In order to train a model on your password set, you have to modify *setup.home_train* by inserting the directory where the training set is located. In this directory you have to put two files:
 
 1. A textual file **called *X.txt*** containing the training-set. The training-set is composed of a list of passwords (one per line) which **frequency is preserved**. For instance, if the password *"12345"* appears 10 times in the leak, this must appear 10 times in *X.txt*. **You have to shuffle the set of passwords before the training.** 
-2. A pickle file mapping chars to integers called ***charmap.pickle***. An example file can be found in *./charmap.pickle*.
+2. A pickle file that contains a dictionary that maps password characters to integers. This must be called ***charmap.pickle***. You can use *./charmap.pickle*.
 
 
 The training process continues till an early-stopping criteria based on the test-sets is reached. Although a maximum number of epochs can be expressed in the configuration file.
