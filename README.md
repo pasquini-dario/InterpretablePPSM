@@ -8,13 +8,13 @@ From the [paper](https://arxiv.org/pdf/2004.07179.pdf).
 
 The notebook *Meter_interface_poc.ipynb*  contains a functional proof-of-concept for the interface of the meter. 
 
-Requirements: 
-* python3
+Requirements for the notebook: 
+* python3, jupyter
 * Tensorflow < 2.0
 ---
 
 # Training:
-Requirements 
+Requirements for the training and application of the model: 
 * python3
 * Tensorflow >= 2.0
 
@@ -36,6 +36,20 @@ During the training, logs are saved inside *HOME/LOGs*, and can be visualized wi
 
 To note:
 * In *ORIGINAL.gin* the used batch size is quite big. Reduce it if you have memory problems with your GPU. 
+
+# Apply the meter:
+The script *apply.py* permits to apply a trained meter on a set of passwords.
+
+The script takes as input three arguments:
+* The path for the trained model in keras format (e.g., *.h5*).
+* A text file containing the passwords; one for each row.
+* The output file where to write the computed probabilities. The produced file is a two columns *tsv*. Here, the first column reports the passwords, whereas the second the assigned unnormalized log probabilities.
+
+For instance, you can run:
+
+> python apply.py PRETRAINED_MODELs/ORIGINAL.h5 example/faithwriters.txt out.tsv
+
+In the script, there are additional parameters that you may want to change in case of a custom meter.
 
 # Pre-trained models:
 
@@ -68,4 +82,3 @@ How to cite our work:
 > 	pages="502--522",<br>
 > 	isbn="978-3-030-58951-6"
 > }
-
