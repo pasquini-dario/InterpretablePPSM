@@ -61,19 +61,21 @@ Work in progress....
 
 How to cite our work:
 
-> @InProceedings{10.1007/978-3-030-58951-6_25,<br>
-> 	author="Pasquini, Dario
-> 	and Ateniese, Giuseppe
-> 	and Bernaschi, Massimo",<br>
-> 	editor="Chen, Liqun
-> 	and Li, Ninghui
-> 	and Liang, Kaitai
-> 	and Schneider, Steve",<br>
-> 	title="Interpretable Probabilistic Password Strength Meters via Deep Learning",<br>
-> 	booktitle="Computer Security -- ESORICS 2020",<br>
-> 	year="2020",<br>
-> 	publisher="Springer International Publishing",<br>
-> 	address="Cham",<br>
-> 	pages="502--522",<br>
-> 	isbn="978-3-030-58951-6"
-> }
+```
+@InProceedings{10.1007/978-3-030-58951-6_25,<br>
+ 	author="Pasquini, Dario
+ 	and Ateniese, Giuseppe
+ 	and Bernaschi, Massimo",
+ 	editor="Chen, Liqun
+ 	and Li, Ninghui
+ 	and Liang, Kaitai
+ 	and Schneider, Steve",
+ 	title="Interpretable Probabilistic Password Strength Meters via Deep Learning",
+ 	booktitle="Computer Security -- ESORICS 2020",
+ 	year="2020",
+ 	publisher="Springer International Publishing",
+ 	address="Cham",
+ 	pages="502--522",
+ 	isbn="978-3-030-58951-6"
+ }
+```
