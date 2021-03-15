@@ -6,7 +6,7 @@ from input_pipeline import PAD
 
 def archMap(arch_id):
     m = {
-        1 : resnet_classic,
+        0 : resnet_classic,
     }
     return m[arch_id]
 
