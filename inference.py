@@ -37,9 +37,8 @@ class Inference:
     def __call__(self, s, INCLUDE_END_SYMBOL):
         
         oxi, xi = self.makeHoles(s, INCLUDE_END_SYMBOL)
-        i = np.arange(len(xi[0]))[None,:]
         
-        out = self.model([xi, i], training=False)
+        out = self.model(xi, training=False)
         p = out[1]
 
         un_p = self.un_p(oxi, p)
@@ -51,9 +50,7 @@ class Inference:
         
         n = len(X)
         
-        I = np.arange(len(H[0]))[None,:]
-        I = np.tile(I, (len(H), 1))
-        out = self.model([H, I], training=False)
+        out = self.model(H, training=False)
         p_ = out[1]
 
         SCOREs = [None] * n
